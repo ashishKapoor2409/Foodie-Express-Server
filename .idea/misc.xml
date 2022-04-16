@@ -4,7 +4,9 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="..\:/Users/kapoo/AndroidStudioProjects/FoodieExpressServer/app/src/main/res/layout/fragment_category.xml" value="0.1" />
+        <entry key="..\:/Users/kapoo/AndroidStudioProjects/FoodieExpressServer/app/src/main/res/layout/fragment_food_list.xml" value="0.1" />
         <entry key="..\:/Users/kapoo/AndroidStudioProjects/FoodieExpressServer/app/src/main/res/layout/layout_category_item.xml" value="0.1" />
+        <entry key="..\:/Users/kapoo/AndroidStudioProjects/FoodieExpressServer/app/src/main/res/layout/layout_food_item.xml" value="0.1" />
       </map>
     </option>
   </component>

@@ -1,9 +1,11 @@
 package com.example.android.foodieexpressserver.common
 
 import com.example.android.foodieexpressserver.model.CategoryModel
+import com.example.android.foodieexpressserver.model.FoodModel
 import com.example.android.foodieexpressserver.model.ServerUserModel
 
 object Common {
+    var foodSelected: FoodModel ? = null
     val SERVER_REF = "Server"
     var currentServerUser: ServerUserModel? = null
     const val CATEGORY_REF: String = "Category"
