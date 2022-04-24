@@ -2,6 +2,8 @@ package com.example.android.foodieexpressserver.ui.foodlist
 
 import android.app.Activity
 import android.app.AlertDialog
+import android.app.SearchManager
+import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
@@ -9,15 +11,10 @@ import android.os.Bundle
 import android.text.TextUtils
 import android.util.DisplayMetrics
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.view.animation.AnimationUtils
 import android.view.animation.LayoutAnimationController
-import android.widget.EditText
-import android.widget.ImageView
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
@@ -65,6 +62,58 @@ class FoodListFragment : Fragment() {
     // This property is only valid between onCreateView and
     // onDestroyView.
 
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.food_list_menu,menu)
+        //Create search view
+        val menuItem = menu.findItem(R.id.action_search)
+
+        val searchManager = activity!!.getSystemService(Context.SEARCH_SERVICE) as SearchManager
+        val searchView = menuItem.actionView as androidx.appcompat.widget.SearchView
+        searchView.setSearchableInfo(searchManager.getSearchableInfo(activity!!.componentName!!))
+        //Event
+        searchView.setOnQueryTextListener(object:androidx.appcompat.widget.SearchView.OnQueryTextListener{
+            override fun onQueryTextSubmit(search: String?): Boolean {
+                startSearchFood(search!!)
+                return true
+            }
+
+            override fun onQueryTextChange(p0: String?): Boolean {
+                return false
+            }
+
+        })
+        //Clear text when click to clear button
+        val closeButton = searchView.findViewById<View>(R.id.search_close_btn) as ImageView
+        closeButton.setOnClickListener {
+            val ed = searchView.findViewById<View>(R.id.search_src_text) as EditText
+            //Clear text
+            ed.setText("")
+            //Clear query
+            searchView.setQuery("",false)
+            //Collapse the action query
+            searchView.onActionViewCollapsed()
+            //Collapse the saerch widget
+            menuItem.collapseActionView()
+            //Restore result to original
+            foodListViewModel.getMutableFoodModelListData().value = Common.categorySelected!!.foods
+
+        }
+
+    }
+
+    private fun startSearchFood(s: String) {
+        val resultFood: MutableList<FoodModel> = ArrayList()
+        for(i in Common.categorySelected!!.foods!!.indices) {
+            val foodModel = Common.categorySelected!!.foods!![i]
+            if(foodModel.name!!.toLowerCase().contains(s!!.toLowerCase())) {
+                foodModel.positionInList = i
+                resultFood.add(foodModel)
+            }
+        }
+        foodListViewModel!!.getMutableFoodModelListData().value = resultFood
+
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -87,7 +136,7 @@ class FoodListFragment : Fragment() {
     }
 
     private fun initViews(root: View?) {
-
+        setHasOptionsMenu(true)
         dialog = SpotsDialog.Builder().setContext(context!!).setCancelable(false).build()
         storage = FirebaseStorage.getInstance()
         storageReference = storage.reference
@@ -122,7 +171,11 @@ class FoodListFragment : Fragment() {
                                         dialogInterface.dismiss()
                                     })
                                     .setPositiveButton("DELETE",{dialogInterface, i->
-                                        Common.categorySelected!!.foods!!.removeAt(pos)
+                                        val foodModel = adapter!!.getItemAtPosition(pos)
+                                        if(foodModel.positionInList == -1)
+                                            Common.categorySelected!!.foods!!.removeAt(pos)
+                                        else
+                                            Common.categorySelected!!.foods!!.removeAt(foodModel.positionInList)
                                         updateFood(Common.categorySelected!!.foods,true)
                                     })
                                 val deleteDialog = builder.create()
@@ -140,7 +193,13 @@ class FoodListFragment : Fragment() {
                         Color.parseColor("#560027"),
                         object : IMyButtonCallback {
                             override fun onClick(pos: Int) {
-                                showUpdateDialog(pos)
+
+                                val foodModel = adapter!!.getItemAtPosition(pos)
+                                if(foodModel.positionInList == -1)
+                                    showUpdateDialog(pos,foodModel)
+                                else
+                                    showUpdateDialog(foodModel.positionInList,foodModel)
+
                             }
                         })
                 )
@@ -153,9 +212,16 @@ class FoodListFragment : Fragment() {
                         Color.parseColor("#12005e"),
                         object : IMyButtonCallback {
                             override fun onClick(pos: Int) {
-                                Common.foodSelected = foodModelList!![pos]
+                                val foodModel = adapter!!.getItemAtPosition(pos)
+                                if(foodModel.positionInList == -1)
+                                    Common.foodSelected = foodModelList!![pos]
+                                else
+                                    Common.foodSelected = foodModel
                                 startActivity(Intent(context!!,SizeAddonEditActivity::class.java))
-                                EventBus.getDefault().postSticky(AddonSizeEditEvent(false,pos))
+                                if(foodModel.positionInList == -1)
+                                    EventBus.getDefault().postSticky(AddonSizeEditEvent(false,pos))
+                                else
+                                    EventBus.getDefault().postSticky(AddonSizeEditEvent(false,foodModel.positionInList))
                             }
                         })
                 )
@@ -168,9 +234,16 @@ class FoodListFragment : Fragment() {
                         Color.parseColor("#333639"),
                         object : IMyButtonCallback {
                             override fun onClick(pos: Int) {
-                                Common.foodSelected = foodModelList!![pos]
+                                val foodModel = adapter!!.getItemAtPosition(pos)
+                                if(foodModel.positionInList == -1)
+                                    Common.foodSelected = foodModelList!![pos]
+                                else
+                                    Common.foodSelected = foodModel
                                 startActivity(Intent(context!!,SizeAddonEditActivity::class.java))
-                                EventBus.getDefault().postSticky(AddonSizeEditEvent(true,pos))
+                                if(foodModel.positionInList == -1)
+                                    EventBus.getDefault().postSticky(AddonSizeEditEvent(true,pos))
+                                else
+                                    EventBus.getDefault().postSticky(AddonSizeEditEvent(true,foodModel.positionInList))
                             }
                         })
                 )
@@ -181,7 +254,7 @@ class FoodListFragment : Fragment() {
 
     }
 
-    private fun showUpdateDialog(pos: Int) {
+    private fun showUpdateDialog(pos: Int,foodModel: FoodModel) {
         val builder = AlertDialog.Builder(context!!)
         builder.setTitle("Update")
         builder.setMessage("Please fill information")
@@ -192,11 +265,11 @@ class FoodListFragment : Fragment() {
         val edt_food_description = itemView.findViewById<View>(R.id.edt_food_description) as EditText
         img_food = itemView.findViewById<View>(R.id.img_food_image) as ImageView
 
-        edt_food_name.setText(StringBuilder("").append(Common.categorySelected!!.foods!![pos].name))
-        edt_food_price.setText(StringBuilder("").append(Common.categorySelected!!.foods!![pos].price))
-        edt_food_description.setText(StringBuilder("").append(Common.categorySelected!!.foods!![pos].description))
+        edt_food_name.setText(StringBuilder("").append(foodModel.name))
+        edt_food_price.setText(StringBuilder("").append(foodModel.price))
+        edt_food_description.setText(StringBuilder("").append(foodModel.description))
 
-        Glide.with(context!!).load(Common.categorySelected!!.foods!![pos].image).into(img_food!!)
+        Glide.with(context!!).load(foodModel.image).into(img_food!!)
         img_food!!.setOnClickListener {
             val intent = Intent()
             intent.type = "image/*"
@@ -209,7 +282,7 @@ class FoodListFragment : Fragment() {
         })
 
         builder.setPositiveButton("UPDATE") { dialogInterface, _ ->
-            val updateFood = Common.categorySelected!!.foods!![pos]
+            val updateFood = foodModel
             updateFood.name = edt_food_name.text.toString()
             updateFood.price = if (TextUtils.isEmpty(edt_food_price.text))
                 0
