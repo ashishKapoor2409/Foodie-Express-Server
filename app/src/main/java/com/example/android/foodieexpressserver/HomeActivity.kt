@@ -4,6 +4,8 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
+import android.widget.TextView
 import android.widget.Toast
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.navigation.NavigationView
@@ -49,7 +51,7 @@ class HomeActivity : AppCompatActivity() {
         // menu should be considered as top level destinations.
         appBarConfiguration = AppBarConfiguration(
             setOf(
-                R.id.nav_category, R.id.nav_food_list, R.id.nav_slideshow
+                R.id.nav_category, R.id.nav_food_list, R.id.nav_slideshow,R.id.nav_order
             ), drawerLayout
         )
         setupActionBarWithNavController(navController, appBarConfiguration)
@@ -65,6 +67,10 @@ class HomeActivity : AppCompatActivity() {
                     if(menuClick != item.itemId)
                         navController.navigate(R.id.nav_category)
                 }
+                else if(item.itemId == R.id.nav_order) {
+                    if(menuClick != item.itemId)
+                        navController.navigate(R.id.nav_order)
+                }
 
                 menuClick = item!!.itemId
 
@@ -72,6 +78,9 @@ class HomeActivity : AppCompatActivity() {
             }
 
         })
+        val headerView = navView.getHeaderView(0)
+        val txt_user = headerView.findViewById<View>(R.id.txt_user) as TextView
+        Common.setSpanString("Hey",Common.currentServerUser!!.name,txt_user)
     }
 
     private fun signOut() {
