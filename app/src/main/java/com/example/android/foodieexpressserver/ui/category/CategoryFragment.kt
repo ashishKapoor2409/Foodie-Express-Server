@@ -30,6 +30,7 @@ import com.example.android.foodieexpressserver.common.Common
 import com.example.android.foodieexpressserver.common.MySwipeHelper
 import com.example.android.foodieexpressserver.common.SpacesItemDecoration
 import com.example.android.foodieexpressserver.model.CategoryModel
+import com.example.android.foodieexpressserver.model.eventBus.ToastEvent
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
@@ -188,7 +189,7 @@ class CategoryFragment : Fragment() {
             }
             .addOnCompleteListener { task ->
                 categoryViewModel!!.loadCategory()
-                Toast.makeText(context,"Update Success",Toast.LENGTH_SHORT).show()
+                EventBus.getDefault().postSticky(ToastEvent(true,false))
             }
 
     }
