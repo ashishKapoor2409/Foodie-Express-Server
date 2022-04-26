@@ -28,7 +28,7 @@ class OrderViewModel : ViewModel(), IOrderCallbackListener {
         return orderModelList
     }
 
-    private fun loadOrder(status: Int) {
+    fun loadOrder(status: Int) {
         val tempList : MutableList<OrderModel> = ArrayList()
         val orderRef = FirebaseDatabase.getInstance()
             .getReference(Common.ORDER_REF)
@@ -53,7 +53,7 @@ class OrderViewModel : ViewModel(), IOrderCallbackListener {
     }
 
     override fun onOrderLoadSuccess(orderList: List<OrderModel>) {
-        if(orderList.size > 0) {
+        if(orderList.size >= 0) {
             Collections.sort(orderList){t1,t2 ->
                 if(t1.createDate < t2.createDate) return@sort -1
                 if(t1.createDate == t2.createDate) 0 else 1

@@ -56,10 +56,10 @@ class MyOrderAdapter(internal var context: Context,
         Common.setSpanStringColor("Order date",
             simpleDateFormat.format(orderList[position].createDate), holder.txt_time, Color.parseColor("#333639") )
         Common.setSpanStringColor("Order status",
-            Common.convertStatusToString(orderList[position].orderStatus), holder.txt_order_status, Color.parseColor("#00575820") )
+            Common.convertStatusToString(orderList[position].orderStatus), holder.txt_order_status, Color.parseColor("#333639") )
 
         Common.setSpanStringColor("Num of items",
-            if(orderList[position].cartItemList != null) "0"
+            if(orderList[position].cartItemList == null) "0"
             else orderList[position].cartItemList!!.size.toString() ,
             holder.txt_num_item, Color.parseColor("#00574B") )
 
