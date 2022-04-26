@@ -16,7 +16,7 @@ import com.example.android.foodieexpressserver.model.OrderModel
 import java.text.SimpleDateFormat
 
 class MyOrderAdapter(internal var context: Context,
-                     internal var orderList : List<OrderModel>):
+                     internal var orderList : MutableList<OrderModel>):
     RecyclerView.Adapter<MyOrderAdapter.MyViewHolder>() {
 
 
@@ -71,5 +71,14 @@ class MyOrderAdapter(internal var context: Context,
 
     override fun getItemCount(): Int {
         return orderList.size
+    }
+
+    fun getItemAtPosition(pos: Int): OrderModel {
+        return orderList[pos]
+    }
+
+    fun removeItem(pos: Int) {
+        orderList.removeAt(pos)
+
     }
 }
