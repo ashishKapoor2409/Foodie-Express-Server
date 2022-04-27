@@ -64,12 +64,16 @@ class HomeActivity : AppCompatActivity() {
                     signOut()
                 }
                 else if(item.itemId == R.id.nav_category) {
-                    if(menuClick != item.itemId)
+                    if(menuClick != item.itemId) {
+                        navController.popBackStack()
                         navController.navigate(R.id.nav_category)
+                    }
                 }
                 else if(item.itemId == R.id.nav_order) {
-                    if(menuClick != item.itemId)
+                    if(menuClick != item.itemId) {
+                        navController.popBackStack()
                         navController.navigate(R.id.nav_order)
+                    }
                 }
 
                 menuClick = item!!.itemId
