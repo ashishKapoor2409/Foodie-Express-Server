@@ -23,6 +23,7 @@ import com.example.android.foodieexpressserver.model.eventBus.CategoryClick
 import com.example.android.foodieexpressserver.model.eventBus.ChangeMenuClick
 import com.example.android.foodieexpressserver.model.eventBus.ToastEvent
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.messaging.FirebaseMessaging
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
@@ -43,6 +44,8 @@ class HomeActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         setSupportActionBar(binding.appBarHome.toolbar)
+
+        subscribeToTopic(Common.getNewOrderTopic())
 
         drawerLayout = binding.drawerLayout
         navView = binding.navView
@@ -85,6 +88,18 @@ class HomeActivity : AppCompatActivity() {
         val headerView = navView.getHeaderView(0)
         val txt_user = headerView.findViewById<View>(R.id.txt_user) as TextView
         Common.setSpanString("Hey",Common.currentServerUser!!.name,txt_user)
+    }
+
+    private fun subscribeToTopic(newOrderTopic: String) {
+        FirebaseMessaging.getInstance()
+            .subscribeToTopic(newOrderTopic)
+            .addOnFailureListener { message ->
+                Toast.makeText(this@HomeActivity,""+message.message,Toast.LENGTH_SHORT).show()
+                    }
+            .addOnCompleteListener {task ->
+                if(!task.isSuccessful)
+                    Toast.makeText(this@HomeActivity,"Subscribe topic failed",Toast.LENGTH_SHORT).show()
+            }
     }
 
     private fun signOut() {
