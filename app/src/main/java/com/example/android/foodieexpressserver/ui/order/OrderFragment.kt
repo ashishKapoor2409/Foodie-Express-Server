@@ -23,31 +23,46 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.android.foodieexpressserver.R
+import com.example.android.foodieexpressserver.Remote.IFCMService
+import com.example.android.foodieexpressserver.Remote.RetrofitFCMClient
 import com.example.android.foodieexpressserver.SizeAddonEditActivity
 import com.example.android.foodieexpressserver.adapter.MyOrderAdapter
 import com.example.android.foodieexpressserver.callback.IMyButtonCallback
 import com.example.android.foodieexpressserver.common.BottomSheetOrderFragment
 import com.example.android.foodieexpressserver.common.Common
 import com.example.android.foodieexpressserver.common.MySwipeHelper
+import com.example.android.foodieexpressserver.model.FCMResponse
+import com.example.android.foodieexpressserver.model.FCMSendData
 import com.example.android.foodieexpressserver.model.OrderModel
+import com.example.android.foodieexpressserver.model.TokenModel
 import com.example.android.foodieexpressserver.model.eventBus.AddonSizeEditEvent
 import com.example.android.foodieexpressserver.model.eventBus.ChangeMenuClick
 import com.example.android.foodieexpressserver.model.eventBus.LoadOrderEvent
 import com.example.android.foodieexpressserver.ui.foodlist.FoodListViewModel
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import com.karumi.dexter.Dexter
 import com.karumi.dexter.PermissionToken
 import com.karumi.dexter.listener.PermissionDeniedResponse
 import com.karumi.dexter.listener.PermissionGrantedResponse
 import com.karumi.dexter.listener.PermissionRequest
 import com.karumi.dexter.listener.single.PermissionListener
+import dmax.dialog.SpotsDialog
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.schedulers.Schedulers
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
+import retrofit2.create
 
 class OrderFragment : Fragment()  {
 
 
+    private val compositeDisposable = CompositeDisposable()
+    lateinit var ifcmService: IFCMService
     lateinit var recycler_order : RecyclerView
     lateinit var txt_order_filter : TextView
     lateinit var layoutAnimationController : LayoutAnimationController
@@ -77,6 +92,8 @@ class OrderFragment : Fragment()  {
     }
 
     private fun initViews(root: View?) {
+
+        ifcmService = RetrofitFCMClient.getInstance().create(IFCMService::class.java)
 
         setHasOptionsMenu(true)
         txt_order_filter = root!!.findViewById(R.id.txt_order_filter) as TextView
@@ -314,11 +331,67 @@ class OrderFragment : Fragment()  {
                 .addOnFailureListener { throwable ->  Toast.makeText(context!!,""+throwable.message,
                 Toast.LENGTH_SHORT).show() }
                 .addOnSuccessListener {
+
+
+                    val dialog = SpotsDialog.Builder().setContext(context).setCancelable(false).build()
+                    dialog.show()
+
+                    FirebaseDatabase.getInstance()
+                        .getReference(Common.TOKEN_REF)
+                        .child(orderModel.userId!!)
+                        .addListenerForSingleValueEvent(object : ValueEventListener{
+                            override fun onDataChange(snapshot: DataSnapshot) {
+                                if(snapshot.exists()) {
+
+                                    val tokenModel = snapshot.getValue(TokenModel::class.java)
+                                    val notiData = HashMap<String,String>()
+                                    notiData.put(Common.NOTI_TITLE,"Your order was update")
+                                    notiData.put(Common.NOTI_CONTENT,StringBuilder("Your order")
+                                        .append(orderModel.key)
+                                        .append(" was update to ")
+                                        .append(Common.convertStatusToString(status)).toString())
+
+                                    val sendData = FCMSendData(tokenModel!!.token!!,notiData)
+                                    compositeDisposable.add(ifcmService.sendNotification(sendData)
+                                        .subscribeOn(Schedulers.io())
+                                        .observeOn(AndroidSchedulers.mainThread())
+                                        .subscribe({ fcmResponse ->
+                                            dialog.dismiss()
+                                            if (fcmResponse.success == 1) {
+                                                Toast.makeText(
+                                                    context!!,
+                                                    "Update order Successfully",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            } else {
+                                                Toast.makeText(
+                                                    context!!,
+                                                    "Failed to send notification",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            }
+                                        },{t: Throwable? ->
+                                            Toast.makeText(context!!,"Order was sent but notification failed",Toast.LENGTH_SHORT).show()
+                                        })
+                                    )
+
+
+                                } else {
+                                    dialog.dismiss()
+                                    Toast.makeText(context,"Token not found",Toast.LENGTH_SHORT).show()
+                                }
+                            }
+
+                            override fun onCancelled(error: DatabaseError) {
+                                dialog.dismiss()
+                                Toast.makeText(context,""+error.message,Toast.LENGTH_SHORT).show()
+                            }
+
+                        })
                     adapter!!.removeItem(pos)
                     adapter!!.notifyItemRemoved(pos)
                     updateTextCounter()
-                    Toast.makeText(context!!,"Update Order Success!!",
-                        Toast.LENGTH_SHORT).show()
+
 
                 }
         } else {
