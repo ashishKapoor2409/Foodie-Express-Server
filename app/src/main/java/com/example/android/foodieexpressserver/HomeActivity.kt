@@ -46,6 +46,7 @@ class HomeActivity : AppCompatActivity() {
         setSupportActionBar(binding.appBarHome.toolbar)
 
         subscribeToTopic(Common.getNewOrderTopic())
+        updateToken()
 
         drawerLayout = binding.drawerLayout
         navView = binding.navView
@@ -94,6 +95,16 @@ class HomeActivity : AppCompatActivity() {
         val headerView = navView.getHeaderView(0)
         val txt_user = headerView.findViewById<View>(R.id.txt_user) as TextView
         Common.setSpanString("Hey",Common.currentServerUser!!.name,txt_user)
+    }
+
+    private fun updateToken() {
+        FirebaseMessaging.getInstance().token
+            .addOnFailureListener {
+                    e-> Toast.makeText(this@HomeActivity,""+e.message,Toast.LENGTH_SHORT).show()
+            }
+            .addOnSuccessListener { instanceIdResult ->
+                Common.updateToken(this@HomeActivity,instanceIdResult,true,false)
+            }
     }
 
     private fun subscribeToTopic(newOrderTopic: String) {

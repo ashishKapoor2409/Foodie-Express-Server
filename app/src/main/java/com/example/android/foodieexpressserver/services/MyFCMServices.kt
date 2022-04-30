@@ -9,7 +9,7 @@ class MyFCMServices : FirebaseMessagingService(){
 
     override fun onNewToken(token: String) {
         super.onNewToken(token)
-        Common.updateToken(this,token)
+        Common.updateToken(this,token,true,false)
     }
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {

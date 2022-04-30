@@ -394,8 +394,54 @@ class OrderFragment : Fragment() ,IShipperLoadCallbackListener {
             .addOnCompleteListener { task: Task<Void?> ->
                 if(task.isSuccessful) {
                     dialog.dismiss()
-                    updateOrder(pos,orderModel,1)
-                    Toast.makeText(context,"Order has been sent to shipper"+shipperModel.name,Toast.LENGTH_SHORT).show()
+                    FirebaseDatabase.getInstance()
+                        .getReference(Common.TOKEN_REF)
+                        .child(orderModel.userId!!)
+                        .addListenerForSingleValueEvent(object : ValueEventListener{
+                            override fun onDataChange(snapshot: DataSnapshot) {
+                                if(snapshot.exists()) {
+
+                                    val tokenModel = snapshot.getValue(TokenModel::class.java)
+                                    val notiData = HashMap<String,String>()
+                                    notiData.put(Common.NOTI_TITLE,"Your have new order need ship")
+                                    notiData.put(Common.NOTI_CONTENT,StringBuilder("Your have new order need ship to")
+                                        .append(orderModel.userPhone).toString())
+
+                                    val sendData = FCMSendData(tokenModel!!.token!!,notiData)
+                                    compositeDisposable.add(ifcmService.sendNotification(sendData)
+                                        .subscribeOn(Schedulers.io())
+                                        .observeOn(AndroidSchedulers.mainThread())
+                                        .subscribe({ fcmResponse ->
+                                            dialog.dismiss()
+                                            if (fcmResponse.success == 1) {
+                                                updateOrder(pos,orderModel,1)
+                                            } else {
+                                                Toast.makeText(
+                                                    context!!,
+                                                    "Failed to send notification. Order wasn't updated",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            }
+                                        },{t: Throwable? ->
+                                            Toast.makeText(context!!,"Order was sent but notification failed",Toast.LENGTH_SHORT).show()
+                                        })
+                                    )
+
+
+                                } else {
+                                    dialog.dismiss()
+                                    Toast.makeText(context,"Token not found",Toast.LENGTH_SHORT).show()
+                                }
+                            }
+
+                            override fun onCancelled(error: DatabaseError) {
+                                dialog.dismiss()
+                                Toast.makeText(context,""+error.message,Toast.LENGTH_SHORT).show()
+                            }
+
+                        })
+                    //updateOrder(pos,orderModel,1)
+                    //Toast.makeText(context,"Order has been sent to shipper"+shipperModel.name,Toast.LENGTH_SHORT).show()
                 }
             }
 
