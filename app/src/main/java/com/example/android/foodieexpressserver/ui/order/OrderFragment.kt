@@ -40,6 +40,7 @@ import com.example.android.foodieexpressserver.model.eventBus.AddonSizeEditEvent
 import com.example.android.foodieexpressserver.model.eventBus.ChangeMenuClick
 import com.example.android.foodieexpressserver.model.eventBus.LoadOrderEvent
 import com.example.android.foodieexpressserver.ui.foodlist.FoodListViewModel
+import com.google.android.gms.tasks.Task
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
@@ -58,6 +59,7 @@ import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import retrofit2.create
+import java.lang.Exception
 
 class OrderFragment : Fragment() ,IShipperLoadCallbackListener {
 
@@ -347,13 +349,11 @@ class OrderFragment : Fragment() ,IShipperLoadCallbackListener {
                 updateOrder(pos,orderModel,-1)
                 dialog.dismiss()
             } else if(rdiShipping != null && rdiShipping.isChecked) {
-                //updateOrder(pos,orderModel,1)
                 var shipperModel:ShipperModel? = null
                 if(myShipperSelectedAdapter != null) {
                     shipperModel = myShipperSelectedAdapter!!.selectedShipper
                     if(shipperModel != null) {
-                        Toast.makeText(context!!,""+shipperModel.name,Toast.LENGTH_SHORT).show()
-                        dialog.dismiss()
+                        createShippingOrder(pos,shipperModel,orderModel,dialog)
                     }
                     else
                         Toast.makeText(context!!,"Please choose shipper",Toast.LENGTH_SHORT).show()
@@ -369,6 +369,37 @@ class OrderFragment : Fragment() ,IShipperLoadCallbackListener {
                 dialog.dismiss()
             }
         }
+    }
+
+    private fun createShippingOrder(
+        pos: Int,
+        shipperModel: ShipperModel,
+        orderModel: OrderModel,
+        dialog: AlertDialog) {
+
+        val shippingOrder = ShippingOrderModel()
+        shippingOrder.shipperName = shipperModel.name
+        shippingOrder.shipperPhone = shipperModel.phone
+        shippingOrder.orderModel = orderModel
+        shippingOrder.isStartTrip = false
+        shippingOrder.currentLat = -1.0
+        shippingOrder.currentLng = -1.0
+        FirebaseDatabase.getInstance().getReference(Common.SHIPPING_ORDER_REF)
+            .push()
+            .setValue(shippingOrder)
+            .addOnFailureListener { e:Exception ->
+                dialog.dismiss()
+                Toast.makeText(context,""+e.message,Toast.LENGTH_SHORT).show()
+            }
+            .addOnCompleteListener { task: Task<Void?> ->
+                if(task.isSuccessful) {
+                    dialog.dismiss()
+                    updateOrder(pos,orderModel,1)
+                    Toast.makeText(context,"Order has been sent to shipper"+shipperModel.name,Toast.LENGTH_SHORT).show()
+                }
+            }
+
+
     }
 
     private fun deleteOrder(pos: Int, orderModel: OrderModel, status: Int) {
