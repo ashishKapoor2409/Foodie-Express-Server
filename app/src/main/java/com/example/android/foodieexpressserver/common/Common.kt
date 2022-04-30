@@ -27,6 +27,7 @@ import java.lang.StringBuilder
 import java.util.*
 
 object Common {
+    val SHIPPER_REF: String = "Shippers"
     val ORDER_REF: String = "Order"
     var foodSelected: FoodModel ? = null
     val SERVER_REF = "Server"
