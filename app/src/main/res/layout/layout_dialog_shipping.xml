@@ -47,8 +47,9 @@
 
         <RadioButton
             android:id="@+id/rdi_shipping"
-            android:text="Shiiping"
+            android:text="Shipping"
             android:checked="true"
+            android:textColor="@color/black"
             android:fontFamily="@font/brandon_medium"
             android:textSize="22sp"
             android:layout_width="match_parent"
@@ -64,19 +65,14 @@
             android:layout_height="wrap_content"/>
     </RadioGroup>
 
-    <ScrollView
+    <androidx.recyclerview.widget.RecyclerView
         android:layout_below="@+id/rdi_group"
         android:scrollbars="none"
         android:layout_above="@id/layout_button"
+        android:id="@+id/recycler_shipper"
+        android:backgroundTint="@color/black"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-        <TextView
-            android:text="a"
-            android:textSize="500sp"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
-    </ScrollView>
+        android:layout_height="match_parent"/>
 
     <LinearLayout
         android:id="@+id/layout_button"

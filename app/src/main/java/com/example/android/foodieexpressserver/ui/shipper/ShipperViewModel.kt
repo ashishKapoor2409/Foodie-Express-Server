@@ -1,11 +1,15 @@
 package com.example.android.foodieexpressserver.ui.shipper
 
+import android.app.AlertDialog
+import android.widget.Button
+import android.widget.RadioButton
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.android.foodieexpressserver.callback.ICategoryCallBackListener
 import com.example.android.foodieexpressserver.callback.IShipperLoadCallbackListener
 import com.example.android.foodieexpressserver.common.Common
 import com.example.android.foodieexpressserver.model.CategoryModel
+import com.example.android.foodieexpressserver.model.OrderModel
 import com.example.android.foodieexpressserver.model.ShipperModel
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -59,6 +63,22 @@ class ShipperViewModel : ViewModel(), IShipperLoadCallbackListener {
 
     override fun onShipperLoadSuccess(shippersList: List<ShipperModel>) {
         shipperListMutable!!.value = shippersList
+
+    }
+
+    override fun onShipperLoadSuccess(
+        pos: Int,
+        orderModel: OrderModel?,
+        shippersList: List<ShipperModel>,
+        dialog: AlertDialog?,
+        ok: Button?,
+        cancel: Button?,
+        rdi_shipping: RadioButton?,
+        rdi_shipped: RadioButton?,
+        rdi_cancelled: RadioButton?,
+        rdi_delete: RadioButton?,
+        rdi_restore_placed: RadioButton?
+    ) {
 
     }
 
